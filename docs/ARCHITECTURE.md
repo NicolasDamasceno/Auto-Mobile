@@ -41,6 +41,7 @@ posto sem sinal).
 | Navegação       | React Navigation (native-stack)                     |
 | Notificações    | `expo-notifications` (locais, sem servidor push)    |
 | Datas           | `date-fns`                                          |
+| Hash de senha   | `expo-crypto` (SHA-256 + salt, várias iterações — sem backend não há bcrypt/Argon2 nativo) |
 
 ## Estrutura de pastas
 
@@ -57,10 +58,10 @@ auto-mobile/
 │   └── USE_CASES.md
 └── src/
     ├── domain/
-    │   ├── entities/        # Vehicle, Expense (+ subtipos), MaintenanceReminder
+    │   ├── entities/        # Driver, Vehicle, Expense (+ subtipos), MaintenanceReminder
     │   ├── enums/           # VehicleType, FuelType, categorias, status
     │   ├── repositories/    # interfaces (portas) — sem implementação
-    │   ├── services/        # interfaces de serviços externos (ex.: notificações)
+    │   ├── services/        # interfaces de serviços externos (ex.: notificações, hash de senha)
     │   └── usecases/        # regras de negócio orquestrando repositórios
     ├── data/
     │   ├── database/        # schema/migrations e conexão SQLite
@@ -71,7 +72,8 @@ auto-mobile/
     │   ├── screens/
     │   └── components/
     ├── services/
-    │   └── notifications/   # implementação de NotificationScheduler (expo-notifications)
+    │   ├── notifications/   # implementação de NotificationScheduler (expo-notifications)
+    │   └── auth/            # implementação de PasswordHasher (expo-crypto)
     └── utils/
 ```
 
@@ -110,3 +112,12 @@ sequenceDiagram
   (litros vs. kWh), controlada pelo `FuelType` do registro.
 - **Notificações locais, não push remoto**: consistente com offline-first;
   não depende de backend/servidor.
+- **Hash de senha com `expo-crypto` (SHA-256 + salt + iterações) em vez
+  de bcrypt/Argon2**: Expo managed workflow não tem binding nativo pra
+  essas libs sem dev client/eject; um PBKDF2 caseiro com iterações
+  suficientes é aceitável pra ameaça real aqui (aparelho perdido/roubado),
+  já que não há servidor pra sofrer ataque de força bruta remoto.
+- **Login não amarra `Vehicle`/`Expense` a `Driver`**: MVP assume um
+  motorista por instalação; `Driver` é só a trava de acesso. Só vira
+  chave estrangeira se o app precisar de múltiplos motoristas por
+  aparelho no futuro.

@@ -5,6 +5,8 @@ veículos). Não há outros atores humanos no MVP (sem backend/servidor).
 
 | ID    | Caso de uso                                   | Resumo |
 |-------|------------------------------------------------|--------|
+| UC00a | Cadastrar motorista (login local)              | Motorista informa nome, e-mail e senha na primeira abertura do app; senha é armazenada só como hash. |
+| UC00b | Entrar no app (login local)                    | Motorista informa e-mail e senha; sistema libera acesso se conferirem. |
 | UC01  | Cadastrar veículo                              | Motorista informa apelido, tipo, marca/modelo, ano, placa (opcional), tipo de combustível e hodômetro inicial. |
 | UC02  | Editar veículo                                 | Motorista atualiza dados cadastrais de um veículo existente. |
 | UC03  | Remover veículo                                | Motorista exclui um veículo e (com confirmação) seu histórico de gastos/lembretes. |
@@ -20,6 +22,21 @@ veículos). Não há outros atores humanos no MVP (sem backend/servidor).
 | UC13  | Receber notificação local de manutenção        | Sistema dispara notificação local quando um lembrete está próximo do vencimento ou vencido. |
 | UC14  | Marcar manutenção como concluída               | A partir de um lembrete vencido, motorista registra a `MaintenanceExpense` correspondente e o lembrete é concluído automaticamente. |
 | UC15  | Exportar dados (backlog)                       | Fora do MVP: exportar histórico em CSV para backup/análise externa. |
+
+## Detalhamento — UC00a/UC00b (Cadastro e login local)
+
+- **Ator**: Motorista.
+- **Pré-condição (UC00a)**: Nenhum `Driver` cadastrado no aparelho (tela só aparece uma vez).
+- **Fluxo principal — UC00a**:
+  1. Motorista informa nome, e-mail e senha (mín. 8 caracteres).
+  2. Sistema verifica que não existe outro `Driver` com o mesmo e-mail.
+  3. Sistema gera o hash da senha (`PasswordHasher`) — a senha em texto puro nunca é persistida.
+  4. Sistema salva o `Driver` e libera acesso ao app.
+- **Fluxo principal — UC00b**:
+  1. Motorista informa e-mail e senha.
+  2. Sistema busca o `Driver` pelo e-mail e confere a senha contra o hash salvo.
+  3. Se conferir, libera acesso; senão, mostra "E-mail ou senha inválidos" (sem indicar qual dos dois está errado).
+- **Pós-condição**: acesso às telas do app liberado até o motorista sair/fechar a sessão (mecanismo de sessão ainda não definido — provavelmente token local simples, já que não há servidor).
 
 ## Detalhamento — UC05 (Registrar abastecimento/recarga)
 

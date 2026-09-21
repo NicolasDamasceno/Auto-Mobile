@@ -4,6 +4,14 @@
 
 ```mermaid
 classDiagram
+    class Driver {
+        +string id
+        +string name
+        +string email
+        +string passwordHash
+        +Date createdAt
+    }
+
     class Vehicle {
         +string id
         +string nickname
@@ -78,6 +86,12 @@ classDiagram
     MaintenanceReminder ..> MaintenanceExpense : concluído por
 ```
 
+`Driver` não tem relacionamento com `Vehicle`/`Expense` no diagrama de
+propósito: ele é só a trava de login local (MVP assume um único
+motorista por instalação — ver regra 10). Se um dia o app precisar de
+múltiplos motoristas por dispositivo, aí sim `Vehicle` ganha
+`driverId`.
+
 ## Enums
 
 | Enum                 | Valores                                                                 |
@@ -122,3 +136,9 @@ classDiagram
 9. `hasGnvKit = true` só é válido quando `fuelType` do veículo é
    `GASOLINE`, `ETHANOL` ou `FLEX`. Um veículo dedicado a GNV de fábrica
    usa `fuelType = GNV` diretamente, sem precisar do kit.
+10. `Driver.passwordHash` nunca guarda a senha em texto puro — é gerado
+    por um `PasswordHasher` (salt + várias iterações, nunca hash de uma
+    rodada só). `Driver.email` é único e normalizado (trim + lowercase)
+    antes de salvar. Login (`AuthenticateDriver`) retorna a mesma
+    mensagem de erro para e-mail inexistente e senha errada, pra não
+    revelar se um e-mail está cadastrado.
