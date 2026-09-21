@@ -14,9 +14,11 @@ classDiagram
         +number year
         +string plate
         +number currentOdometerKm
+        +bool hasGnvKit
         +Date createdAt
         +isElectric() bool
         +isHybrid() bool
+        +acceptedFuelTypes() FuelType[]
         +updateOdometer(km) void
     }
 
@@ -81,7 +83,7 @@ classDiagram
 | Enum                 | Valores                                                                 |
 |-----------------------|--------------------------------------------------------------------------|
 | `VehicleType`          | `CAR`, `MOTORCYCLE`, `PICKUP_TRUCK`, `SUV`, `VAN`, `OTHER`               |
-| `FuelType`             | `GASOLINE`, `ETHANOL`, `FLEX`, `DIESEL`, `GNV`, `ELECTRIC`, `HYBRID`, `ARLA_32` |
+| `FuelType`             | `GASOLINE`, `ETHANOL` (motor dedicado a álcool, não-flex), `FLEX` (bicombustível gasolina/etanol), `DIESEL`, `GNV`, `ELECTRIC`, `HYBRID`, `ARLA_32` |
 | `DieselGrade`          | `S10`, `S500` (atributo opcional, só quando `fuelType = DIESEL`)        |
 | `ExpenseCategory`      | `FUEL`, `MAINTENANCE`, `OTHER` (discriminador das subclasses de Expense) |
 | `MaintenanceType`      | `PREVENTIVE`, `CORRECTIVE`                                               |
@@ -93,9 +95,12 @@ classDiagram
 
 1. Um `Vehicle` nunca tem `currentOdometerKm` decrescente — só é
    atualizado para valores maiores ou iguais.
-2. `FuelExpense.fuelType` deve ser compatível com o veículo: um veículo
-   `ELECTRIC` só aceita `FuelExpense` com `fuelType = ELECTRIC`; um
-   veículo `HYBRID` aceita `ELECTRIC` ou o tipo de combustão configurado.
+2. `FuelExpense.fuelType` deve estar em `Vehicle.acceptedFuelTypes()`: um
+   veículo `ELECTRIC` só aceita `ELECTRIC`; um veículo `HYBRID` aceita
+   `ELECTRIC` ou o tipo de combustão configurado; um veículo `GASOLINE`,
+   `ETHANOL` ou `FLEX` com `hasGnvKit = true` também aceita `GNV`, além do
+   seu `fuelType` de fábrica (kit de conversão bi/tricombustível — não
+   troca o `fuelType` original do veículo).
 3. `unit()` de um `FuelExpense` é `kWh` quando `fuelType = ELECTRIC`, e
    `L` (litros) para os demais.
 4. Um `MaintenanceReminder` fica `OVERDUE` quando a data atual passa de
@@ -114,3 +119,6 @@ classDiagram
    preço unitário, posto) por ser comprado do mesmo jeito, por litro, no
    posto. Um veículo só aceita `ARLA_32` se for `DIESEL` (sistemas SCR são
    exclusivos de motores a diesel).
+9. `hasGnvKit = true` só é válido quando `fuelType` do veículo é
+   `GASOLINE`, `ETHANOL` ou `FLEX`. Um veículo dedicado a GNV de fábrica
+   usa `fuelType = GNV` diretamente, sem precisar do kit.
