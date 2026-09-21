@@ -37,6 +37,7 @@ classDiagram
         +number unitPrice
         +bool fullTank
         +string stationName
+        +DieselGrade dieselGrade
         +unit() string
     }
 
@@ -80,7 +81,8 @@ classDiagram
 | Enum                 | Valores                                                                 |
 |-----------------------|--------------------------------------------------------------------------|
 | `VehicleType`          | `CAR`, `MOTORCYCLE`, `PICKUP_TRUCK`, `SUV`, `VAN`, `OTHER`               |
-| `FuelType`             | `GASOLINE`, `ETHANOL`, `FLEX`, `DIESEL`, `GNV`, `ELECTRIC`, `HYBRID`     |
+| `FuelType`             | `GASOLINE`, `ETHANOL`, `FLEX`, `DIESEL`, `GNV`, `ELECTRIC`, `HYBRID`, `ARLA_32` |
+| `DieselGrade`          | `S10`, `S500` (atributo opcional, só quando `fuelType = DIESEL`)        |
 | `ExpenseCategory`      | `FUEL`, `MAINTENANCE`, `OTHER` (discriminador das subclasses de Expense) |
 | `MaintenanceType`      | `PREVENTIVE`, `CORRECTIVE`                                               |
 | `OtherExpenseCategory` | `INSURANCE`, `TAXES`, `CAR_WASH`, `PARKING`, `TOLL`, `FINE`, `ACCESSORY`, `DOCUMENTATION`, `OTHER` |
@@ -104,3 +106,11 @@ classDiagram
 6. Consumo médio (`km/l` ou `km/kWh`) é calculado entre dois `FuelExpense`
    consecutivos do mesmo veículo com `fullTank = true`:
    `distância percorrida / quantidade abastecida na segunda medição`.
+7. `dieselGrade` só pode ser definido quando `fuelType = DIESEL`; para
+   qualquer outro `fuelType` (incluindo `ARLA_32`) o campo deve ficar vazio.
+8. `FuelExpense` com `fuelType = ARLA_32` não entra no cálculo de consumo
+   médio (regra 6) nem conta como abastecimento de combustível — é uma
+   despesa própria, só compartilha a estrutura de registro (quantidade,
+   preço unitário, posto) por ser comprado do mesmo jeito, por litro, no
+   posto. Um veículo só aceita `ARLA_32` se for `DIESEL` (sistemas SCR são
+   exclusivos de motores a diesel).
