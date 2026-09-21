@@ -1,5 +1,5 @@
 import { ExpenseCategory, MaintenanceType, OtherExpenseCategory } from '../enums/ExpenseCategory';
-import { FuelType } from '../enums/FuelType';
+import { DieselGrade, FuelType } from '../enums/FuelType';
 
 export interface ExpenseProps {
   id: string;
@@ -46,23 +46,30 @@ export interface FuelExpenseProps extends ExpenseProps {
   unitPrice: number;
   fullTank: boolean;
   stationName?: string;
+  /** Só válido quando fuelType === DIESEL; ignorado para os demais combustíveis. */
+  dieselGrade?: DieselGrade;
 }
 
-/** Abastecimento (combustão) ou recarga (elétrico) — mesma categoria, unidade diferente. */
+/** Abastecimento (combustão/Arla) ou recarga (elétrico) — mesma categoria, unidade diferente. */
 export class FuelExpense extends Expense {
   fuelType: FuelType;
   quantity: number;
   unitPrice: number;
   fullTank: boolean;
   stationName?: string;
+  dieselGrade?: DieselGrade;
 
   constructor(props: FuelExpenseProps) {
     super(props);
+    if (props.dieselGrade && props.fuelType !== FuelType.DIESEL) {
+      throw new Error('dieselGrade só é válido quando fuelType é DIESEL.');
+    }
     this.fuelType = props.fuelType;
     this.quantity = props.quantity;
     this.unitPrice = props.unitPrice;
     this.fullTank = props.fullTank;
     this.stationName = props.stationName;
+    this.dieselGrade = props.dieselGrade;
   }
 
   get category(): ExpenseCategory {
