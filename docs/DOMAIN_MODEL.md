@@ -12,6 +12,18 @@ classDiagram
         +Date createdAt
     }
 
+    class AuthSession {
+        +string id
+        +string driverId
+        +string tokenHash
+        +Date createdAt
+        +Date expiresAt
+        +isExpired(now) bool
+        +renew(now) void
+    }
+
+    Driver "1" --> "many" AuthSession : possui
+
     class Vehicle {
         +string id
         +string nickname
@@ -142,3 +154,10 @@ múltiplos motoristas por dispositivo, aí sim `Vehicle` ganha
     antes de salvar. Login (`AuthenticateDriver`) retorna a mesma
     mensagem de erro para e-mail inexistente e senha errada, pra não
     revelar se um e-mail está cadastrado.
+11. `AuthSession.tokenHash` guarda só o hash do token — o token bruto
+    nunca é persistido no SQLite, só no SecureStore do aparelho. Toda vez
+    que `ResumeSession` valida um token com sucesso, chama
+    `AuthSession.renew(now)` (sliding expiration de `SESSION_TTL_DAYS` =
+    90 dias) — na prática só expira se o motorista ficar 90 dias sem
+    abrir o app. `Logout` apaga a sessão do motorista no banco; apagar o
+    token do SecureStore é responsabilidade do chamador (fora do domain).

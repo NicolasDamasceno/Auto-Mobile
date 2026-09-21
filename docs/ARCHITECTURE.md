@@ -42,6 +42,7 @@ posto sem sinal).
 | Notificações    | `expo-notifications` (locais, sem servidor push)    |
 | Datas           | `date-fns`                                          |
 | Hash de senha   | `expo-crypto` (SHA-256 + salt, várias iterações — sem backend não há bcrypt/Argon2 nativo) |
+| Sessão de login | `expo-crypto` (token opaco) + `expo-secure-store` (Keychain/Keystore, "continuar conectado") |
 
 ## Estrutura de pastas
 
@@ -58,11 +59,11 @@ auto-mobile/
 │   └── USE_CASES.md
 └── src/
     ├── domain/
-    │   ├── entities/        # Driver, Vehicle, Expense (+ subtipos), MaintenanceReminder
+    │   ├── entities/        # Driver, AuthSession, Vehicle, Expense (+ subtipos), MaintenanceReminder
     │   ├── enums/           # VehicleType, FuelType, categorias, status
     │   ├── repositories/    # interfaces (portas) — sem implementação
-    │   ├── services/        # interfaces de serviços externos (ex.: notificações, hash de senha)
-    │   └── usecases/        # regras de negócio orquestrando repositórios
+    │   ├── services/        # interfaces de serviços externos (notificações, hash de senha, token de sessão)
+    │   └── usecases/        # regras de negócio orquestrando repositórios (inclui Login/ResumeSession/Logout)
     ├── data/
     │   ├── database/        # schema/migrations e conexão SQLite
     │   └── repositories/    # implementações SQLite das interfaces do domain
@@ -121,3 +122,10 @@ sequenceDiagram
   motorista por instalação; `Driver` é só a trava de acesso. Só vira
   chave estrangeira se o app precisar de múltiplos motoristas por
   aparelho no futuro.
+- **Sessão de login com token + SecureStore, sliding expiration de 90
+  dias**, em vez de pedir senha toda abertura ou nunca expirar: dá o
+  comportamento "tipo rede social" que foi pedido (uso contínuo nunca
+  desloga) sem manter uma sessão eternamente válida caso o aparelho
+  fique esquecido/perdido por muito tempo. O token vive só no
+  SecureStore (Keychain/Keystore), nunca no SQLite — só o hash dele fica
+  no banco, junto com a validade da sessão.

@@ -6,7 +6,9 @@ veículos). Não há outros atores humanos no MVP (sem backend/servidor).
 | ID    | Caso de uso                                   | Resumo |
 |-------|------------------------------------------------|--------|
 | UC00a | Cadastrar motorista (login local)              | Motorista informa nome, e-mail e senha na primeira abertura do app; senha é armazenada só como hash. |
-| UC00b | Entrar no app (login local)                    | Motorista informa e-mail e senha; sistema libera acesso se conferirem. |
+| UC00b | Entrar no app (login local)                    | Motorista informa e-mail e senha; sistema confere e emite uma sessão de longa duração (token). |
+| UC00c | Continuar conectado (auto-login)               | A cada abertura do app, sistema valida o token salvo no aparelho e entra direto, sem pedir senha, se a sessão não tiver expirado. |
+| UC00d | Sair (logout)                                  | Motorista pede para sair; sistema revoga a sessão e apaga o token do aparelho. |
 | UC01  | Cadastrar veículo                              | Motorista informa apelido, tipo, marca/modelo, ano, placa (opcional), tipo de combustível e hodômetro inicial. |
 | UC02  | Editar veículo                                 | Motorista atualiza dados cadastrais de um veículo existente. |
 | UC03  | Remover veículo                                | Motorista exclui um veículo e (com confirmação) seu histórico de gastos/lembretes. |
@@ -35,8 +37,11 @@ veículos). Não há outros atores humanos no MVP (sem backend/servidor).
 - **Fluxo principal — UC00b**:
   1. Motorista informa e-mail e senha.
   2. Sistema busca o `Driver` pelo e-mail e confere a senha contra o hash salvo.
-  3. Se conferir, libera acesso; senão, mostra "E-mail ou senha inválidos" (sem indicar qual dos dois está errado).
-- **Pós-condição**: acesso às telas do app liberado até o motorista sair/fechar a sessão (mecanismo de sessão ainda não definido — provavelmente token local simples, já que não há servidor).
+  3. Se conferir, gera um token opaco (`SessionTokenService`), salva seu hash em uma `AuthSession` (válida por `SESSION_TTL_DAYS` = 90 dias) e devolve o token bruto para a UI guardar no SecureStore do aparelho.
+  4. Se não conferir, mostra "E-mail ou senha inválidos" (sem indicar qual dos dois está errado).
+- **Fluxo principal — UC00c**: no boot do app, lê o token do SecureStore (se existir) e chama `ResumeSession`; se o hash bater com uma `AuthSession` não expirada, renova a expiração (mais 90 dias a partir de agora) e libera o app direto na tela principal — sem pedir e-mail/senha de novo. Se não houver token, ou a sessão tiver expirado/for inválida, volta pra tela de login (UC00b).
+- **Fluxo principal — UC00d**: motorista toca em "Sair"; sistema chama `Logout` (apaga a `AuthSession` do banco) e a UI apaga o token do SecureStore; volta para a tela de login.
+- **Pós-condição**: acesso às telas do app liberado enquanto a sessão não expirar (90 dias de inatividade) ou até logout explícito.
 
 ## Detalhamento — UC05 (Registrar abastecimento/recarga)
 
