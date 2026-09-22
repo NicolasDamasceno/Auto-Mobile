@@ -43,6 +43,8 @@ seguro, IPVA, pedágio, lavagem, multas — e recebe de volta:
 
 ## Escopo do MVP (dentro)
 
+- Login local do motorista (nome, e-mail, senha) — trava de acesso ao
+  app no aparelho, sem servidor/conta na nuvem.
 - Cadastro de múltiplos veículos (carro, moto, caminhonete, SUV, van, outros;
   combustão, flex, elétrico, híbrido).
 - Registro de abastecimento/recarga.
@@ -57,7 +59,8 @@ seguro, IPVA, pedágio, lavagem, multas — e recebe de volta:
 ## Fora do MVP (backlog futuro)
 
 - Sincronização em nuvem / múltiplos dispositivos.
-- Login/conta de usuário.
+- Múltiplos motoristas no mesmo app / troca de conta (o login do MVP é
+  de trava local, um único `Driver` por instalação).
 - Compartilhamento de veículo entre motoristas (ex: família, frota).
 - OCR de nota fiscal / leitura automática de bomba.
 - Integração com preços de combustível em tempo real.

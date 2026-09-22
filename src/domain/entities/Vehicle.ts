@@ -1,6 +1,9 @@
 import { VehicleType } from '../enums/VehicleType';
 import { FuelType } from '../enums/FuelType';
 
+/** Combustíveis de fábrica sobre os quais é possível instalar um kit GNV (bi/tricombustível). */
+const GNV_KIT_COMPATIBLE_FUEL_TYPES: FuelType[] = [FuelType.GASOLINE, FuelType.ETHANOL, FuelType.FLEX];
+
 export interface VehicleProps {
   id: string;
   nickname: string;
@@ -13,6 +16,12 @@ export interface VehicleProps {
   currentOdometerKm: number;
   photoUri?: string;
   createdAt: Date;
+  /**
+   * Kit de GNV instalado sobre o combustível de fábrica (fuelType), tornando o
+   * veículo bi/tricombustível. Só válido para fuelType GASOLINE/ETHANOL/FLEX —
+   * um veículo já dedicado a GNV de fábrica usa fuelType = GNV diretamente.
+   */
+  hasGnvKit?: boolean;
 }
 
 export class Vehicle {
@@ -27,10 +36,14 @@ export class Vehicle {
   currentOdometerKm: number;
   photoUri?: string;
   readonly createdAt: Date;
+  hasGnvKit: boolean;
 
   constructor(props: VehicleProps) {
     if (props.currentOdometerKm < 0) {
       throw new Error('O hodômetro não pode ser negativo.');
+    }
+    if (props.hasGnvKit && !GNV_KIT_COMPATIBLE_FUEL_TYPES.includes(props.fuelType)) {
+      throw new Error('hasGnvKit só é válido para veículos GASOLINE, ETHANOL ou FLEX.');
     }
 
     this.id = props.id;
@@ -44,6 +57,7 @@ export class Vehicle {
     this.currentOdometerKm = props.currentOdometerKm;
     this.photoUri = props.photoUri;
     this.createdAt = props.createdAt;
+    this.hasGnvKit = props.hasGnvKit ?? false;
   }
 
   get isElectric(): boolean {
@@ -52,6 +66,15 @@ export class Vehicle {
 
   get isHybrid(): boolean {
     return this.fuelType === FuelType.HYBRID;
+  }
+
+  /** Combustíveis aceitos em um FuelExpense deste veículo (fábrica + kit GNV, se houver). */
+  get acceptedFuelTypes(): FuelType[] {
+    const types = [this.fuelType];
+    if (this.hasGnvKit) {
+      types.push(FuelType.GNV);
+    }
+    return types;
   }
 
   /** Atualiza o hodômetro do veículo. Nunca aceita um valor menor que o atual. */
