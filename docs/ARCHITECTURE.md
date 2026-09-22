@@ -73,9 +73,9 @@ auto-mobile/
     │   ├── screens/
     │   └── components/
     ├── services/
-    │   ├── notifications/   # implementação de NotificationScheduler (expo-notifications)
-    │   └── auth/            # implementação de PasswordHasher (expo-crypto)
-    └── utils/
+    │   ├── notifications/   # implementação de NotificationScheduler (expo-notifications, a implementar)
+    │   └── auth/            # ExpoPasswordHasher, ExpoSessionTokenService, sessionTokenStorage (SecureStore)
+    └── utils/                # hex.ts (bytesToHex) e outros helpers sem estado
 ```
 
 Cada pasta ainda vazia tem um `README.md` explicando o que vai entrar nela
@@ -113,11 +113,14 @@ sequenceDiagram
   (litros vs. kWh), controlada pelo `FuelType` do registro.
 - **Notificações locais, não push remoto**: consistente com offline-first;
   não depende de backend/servidor.
-- **Hash de senha com `expo-crypto` (SHA-256 + salt + iterações) em vez
-  de bcrypt/Argon2**: Expo managed workflow não tem binding nativo pra
-  essas libs sem dev client/eject; um PBKDF2 caseiro com iterações
-  suficientes é aceitável pra ameaça real aqui (aparelho perdido/roubado),
-  já que não há servidor pra sofrer ataque de força bruta remoto.
+- **Hash de senha com `expo-crypto` (SHA-256 + salt + 1.000 iterações)
+  em vez de bcrypt/Argon2**: Expo managed workflow não tem binding
+  nativo pra essas libs sem dev client/eject. 1.000 iterações (bem
+  menos que os ~100k de um PBKDF2 de servidor) porque
+  `digestStringAsync` cruza a ponte nativa a cada chamada — mais
+  iterações travariam login/cadastro por vários segundos. Aceitável pra
+  ameaça real aqui (aparelho perdido/roubado, sem servidor pra sofrer
+  força bruta remota); ver `src/services/auth/README.md`.
 - **Login não amarra `Vehicle`/`Expense` a `Driver`**: MVP assume um
   motorista por instalação; `Driver` é só a trava de acesso. Só vira
   chave estrangeira se o app precisar de múltiplos motoristas por

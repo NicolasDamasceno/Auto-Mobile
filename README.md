@@ -5,10 +5,13 @@ gastos do seu veículo — carro, moto, caminhonete, SUV, van, a combustão
 ou elétrico/híbrido — em um só lugar: abastecimento/recarga, manutenções
 preventivas e corretivas, seguro, IPVA, pedágio, lavagem, multas e mais.
 
-> Status: **domínio e persistência local implementados** — modelo de
-> domínio, casos de uso e banco SQLite (schema, migrations e
-> repositórios) prontos; UI, ViewModels, navegação e as implementações
-> de hash de senha/notificações ainda por implementar.
+> Status: **domínio, persistência local e autenticação implementados**
+> — modelo de domínio, casos de uso, banco SQLite (schema, migrations e
+> repositórios) e os serviços de hash de senha/token de sessão prontos;
+> UI, ViewModels, navegação e notificações locais ainda por implementar.
+> Backend (sync entre aparelhos e API pública de dados agregados por
+> modelo de veículo) fica pra depois do app mobile — ver
+> `docs/ARCHITECTURE.md`.
 
 ## Documentação
 
@@ -31,8 +34,8 @@ src/
 ├── data/           # SQLite: schema, migrations e repositórios (implementado)
 ├── viewmodels/      # stores Zustand (a implementar)
 ├── presentation/    # telas, navegação e componentes (a implementar)
-├── services/        # hash de senha, token de sessão e notificações locais (a implementar)
-└── utils/
+├── services/        # hash de senha e token de sessão (implementado); notificações locais (a implementar)
+└── utils/           # helpers sem estado (ex.: hex.ts)
 ```
 
 ## Como rodar (após implementar a UI)
