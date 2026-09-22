@@ -67,15 +67,15 @@ auto-mobile/
     ├── data/
     │   ├── database/        # schema/migrations e conexão SQLite
     │   └── repositories/    # implementações SQLite das interfaces do domain
-    ├── viewmodels/          # stores Zustand (adaptam use cases -> UI)
+    ├── viewmodels/          # stores Zustand: authStore, vehicleStore, expenseStore, reminderStore
     ├── presentation/
     │   ├── navigation/
     │   ├── screens/
     │   └── components/
     ├── services/
-    │   ├── notifications/   # implementação de NotificationScheduler (expo-notifications, a implementar)
+    │   ├── notifications/   # NoopNotificationScheduler (placeholder); expo-notifications real, a implementar
     │   └── auth/            # ExpoPasswordHasher, ExpoSessionTokenService, sessionTokenStorage (SecureStore)
-    └── utils/                # hex.ts (bytesToHex) e outros helpers sem estado
+    └── utils/                # hex.ts (bytesToHex), id.ts (generateId) e outros helpers sem estado
 ```
 
 Cada pasta ainda vazia tem um `README.md` explicando o que vai entrar nela
@@ -141,3 +141,17 @@ sequenceDiagram
   absolutos (mesmo raciocínio de sempre: poucas centenas/milhares de
   linhas); as outras otimizações (enums, datas e dinheiro como
   `INTEGER`, tabela única para `expenses`) continuam valendo.
+- **Stores sem container de DI**: `viewmodels/dependencies.ts` só
+  instancia os repositórios/serviços uma vez em módulo top-level. Um
+  container (InversifyJS etc.) seria over-engineering pro tamanho do
+  app — a única "injeção" que existe é a store importar de
+  `dependencies.ts` em vez de instanciar direto.
+- **`expenseStore` conhece `vehicleStore`/`reminderStore` (não o
+  contrário)**: `RegisterExpense` atualiza `vehicles.odometer_km` e
+  conclui lembretes só no banco, então depois de chamar o caso de uso o
+  `expenseStore` também empurra a entidade atualizada pro
+  `vehicleStore`/`reminderStore` em memória (`syncSideEffects`) — senão
+  a tela do veículo mostraria hodômetro/lembrete desatualizados até um
+  reload manual. É uma dependência de uma via só (expense -> vehicle/
+  reminder), nunca ao contrário, pra não criar um ciclo de import entre
+  stores.
