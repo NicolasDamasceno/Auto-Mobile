@@ -5,9 +5,10 @@ gastos do seu veículo — carro, moto, caminhonete, SUV, van, a combustão
 ou elétrico/híbrido — em um só lugar: abastecimento/recarga, manutenções
 preventivas e corretivas, seguro, IPVA, pedágio, lavagem, multas e mais.
 
-> Status: **fase de brainstorm/planejamento** — modelo de domínio e
-> casos de uso definidos; UI, persistência SQLite e navegação ainda por
-> implementar.
+> Status: **domínio e persistência local implementados** — modelo de
+> domínio, casos de uso e banco SQLite (schema, migrations e
+> repositórios) prontos; UI, ViewModels, navegação e as implementações
+> de hash de senha/notificações ainda por implementar.
 
 ## Documentação
 
@@ -27,10 +28,10 @@ locais).
 ```
 src/
 ├── domain/         # entidades, enums, casos de uso, interfaces de repositório (implementado)
-├── data/           # SQLite: schema e implementações dos repositórios (a implementar)
+├── data/           # SQLite: schema, migrations e repositórios (implementado)
 ├── viewmodels/      # stores Zustand (a implementar)
 ├── presentation/    # telas, navegação e componentes (a implementar)
-├── services/        # notificações locais (a implementar)
+├── services/        # hash de senha, token de sessão e notificações locais (a implementar)
 └── utils/
 ```
 

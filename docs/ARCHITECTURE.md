@@ -129,3 +129,12 @@ sequenceDiagram
   fique esquecido/perdido por muito tempo. O token vive só no
   SecureStore (Keychain/Keystore), nunca no SQLite — só o hash dele fica
   no banco, junto com a validade da sessão.
+- **Ids das tabelas são `TEXT` (UUID), não `INTEGER PRIMARY KEY`**:
+  revisão em relação ao primeiro rascunho do schema (DER). Toda entidade
+  de domínio já nasce com `id` pronto antes do `save()` — `RegisterVehicle`,
+  `RegisterDriver`, `Login`, etc. recebem o id de quem chamou o caso de
+  uso, não do banco — então não dá pra depender do autoincremento do
+  SQLite. O custo de espaço do `TEXT` continua pequeno em termos
+  absolutos (mesmo raciocínio de sempre: poucas centenas/milhares de
+  linhas); as outras otimizações (enums, datas e dinheiro como
+  `INTEGER`, tabela única para `expenses`) continuam valendo.
