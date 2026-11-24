@@ -5,3 +5,9 @@ dist/
 web-build/
 *.log
 .DS_Store
+
+# Variáveis de ambiente e segredos locais (NUNCA versionar)
+.env
+.env.local
+.env.*.local
+*.env
