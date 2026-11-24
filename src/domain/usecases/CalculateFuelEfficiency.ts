@@ -1,5 +1,6 @@
 import { ExpenseRepository } from '../repositories/ExpenseRepository';
 import { ExpenseCategory } from '../enums/ExpenseCategory';
+import { FuelType } from '../enums/FuelType';
 import { FuelExpense } from '../entities/Expense';
 
 export interface FuelEfficiencyResult {
@@ -11,7 +12,8 @@ export interface FuelEfficiencyResult {
 
 /**
  * UC11 — Calcula o consumo médio entre dois abastecimentos/recargas
- * consecutivos com tanque cheio/carga completa.
+ * consecutivos com tanque cheio/carga completa. ARLA_32 é excluído (regra 8
+ * do DOMAIN_MODEL.md): é comprado por litro, mas não é combustível.
  */
 export class CalculateFuelEfficiency {
   constructor(private readonly expenseRepository: ExpenseRepository) {}
@@ -23,7 +25,7 @@ export class CalculateFuelEfficiency {
     });
 
     const fullTankFillUps = (expenses as FuelExpense[])
-      .filter((expense) => expense.fullTank)
+      .filter((expense) => expense.fullTank && expense.fuelType !== FuelType.ARLA_32)
       .sort((a, b) => a.odometerKm - b.odometerKm);
 
     if (fullTankFillUps.length < 2) {

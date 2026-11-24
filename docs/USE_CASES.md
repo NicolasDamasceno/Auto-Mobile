@@ -9,7 +9,7 @@ veículos). Não há outros atores humanos no MVP (sem backend/servidor).
 | UC00b | Entrar no app (login local)                    | Motorista informa e-mail e senha; sistema confere e emite uma sessão de longa duração (token). |
 | UC00c | Continuar conectado (auto-login)               | A cada abertura do app, sistema valida o token salvo no aparelho e entra direto, sem pedir senha, se a sessão não tiver expirado. |
 | UC00d | Sair (logout)                                  | Motorista pede para sair; sistema revoga a sessão e apaga o token do aparelho. |
-| UC01  | Cadastrar veículo                              | Motorista informa apelido, tipo, marca/modelo, ano, placa (opcional), tipo de combustível e hodômetro inicial. |
+| UC01  | Cadastrar veículo                              | Motorista informa apelido, tipo, marca/modelo, ano, placa (opcional), tipo de combustível (e, se `HYBRID`, o combustível do motor térmico) e hodômetro inicial. |
 | UC02  | Editar veículo                                 | Motorista atualiza dados cadastrais de um veículo existente. |
 | UC03  | Remover veículo                                | Motorista exclui um veículo e (com confirmação) seu histórico de gastos/lembretes. |
 | UC04  | Selecionar veículo ativo                       | Motorista alterna qual veículo está "em foco" nas telas de registro/dashboard. |
@@ -53,7 +53,8 @@ veículos). Não há outros atores humanos no MVP (sem backend/servidor).
   3. Sistema calcula e sugere o valor total (`quantity * unitPrice`), editável.
   4. Motorista confirma.
   5. Sistema salva o `FuelExpense`, atualiza `Vehicle.currentOdometerKm` e recalcula o consumo médio (UC11) se houver um registro anterior com `fullTank = true`.
-- **Fluxo alternativo**: hodômetro informado é menor que o atual do veículo → sistema bloqueia com mensagem de erro (regra de negócio do `Vehicle.updateOdometer`).
+- **Fluxo alternativo (a)**: hodômetro informado é menor que o atual do veículo → sistema bloqueia com mensagem de erro (regra de negócio do `Vehicle.updateOdometer`).
+- **Fluxo alternativo (b)**: `fuelType` escolhido não está em `Vehicle.acceptedFuelTypes()` (ex.: GNV num veículo `ELECTRIC`, ARLA_32 num veículo que não é `DIESEL`) → sistema bloqueia com mensagem de erro (`RegisterExpense`, regras 2/8 do `DOMAIN_MODEL.md`); a tela de "Novo abastecimento" deve restringir as opções mostradas a `acceptedFuelTypes()` para evitar chegar nesse erro.
 - **Pós-condição**: despesa registrada, hodômetro do veículo atualizado, disponível no histórico (UC09) e no dashboard (UC10).
 
 ## Detalhamento — UC12 + UC13 (Lembrete de manutenção preventiva)

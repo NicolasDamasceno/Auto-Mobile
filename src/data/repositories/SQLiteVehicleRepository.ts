@@ -10,6 +10,7 @@ interface VehicleRow {
   type: number;
   fuel_type: number;
   has_gnv_kit: number;
+  combustion_fuel_type: number | null;
   brand: string;
   model: string;
   year: number;
@@ -26,6 +27,7 @@ function toDomain(row: VehicleRow): Vehicle {
     type: vehicleTypeCodec.decode(row.type),
     fuelType: fuelTypeCodec.decode(row.fuel_type),
     hasGnvKit: fromSqliteBool(row.has_gnv_kit),
+    combustionFuelType: fuelTypeCodec.decodeOptional(row.combustion_fuel_type),
     brand: row.brand,
     model: row.model,
     year: row.year,
@@ -53,13 +55,14 @@ export class SQLiteVehicleRepository implements VehicleRepository {
     const db = await getDatabase();
     await db.runAsync(
       `INSERT INTO vehicles
-         (id, nickname, type, fuel_type, has_gnv_kit, brand, model, year, plate, odometer_km, photo_uri, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         (id, nickname, type, fuel_type, has_gnv_kit, combustion_fuel_type, brand, model, year, plate, odometer_km, photo_uri, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          nickname = excluded.nickname,
          type = excluded.type,
          fuel_type = excluded.fuel_type,
          has_gnv_kit = excluded.has_gnv_kit,
+         combustion_fuel_type = excluded.combustion_fuel_type,
          brand = excluded.brand,
          model = excluded.model,
          year = excluded.year,
@@ -71,6 +74,7 @@ export class SQLiteVehicleRepository implements VehicleRepository {
       vehicleTypeCodec.encode(vehicle.type),
       fuelTypeCodec.encode(vehicle.fuelType),
       toSqliteBool(vehicle.hasGnvKit),
+      fuelTypeCodec.encodeOptional(vehicle.combustionFuelType),
       vehicle.brand,
       vehicle.model,
       vehicle.year,

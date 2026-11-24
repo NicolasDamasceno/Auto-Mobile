@@ -67,15 +67,15 @@ auto-mobile/
     ├── data/
     │   ├── database/        # schema/migrations e conexão SQLite
     │   └── repositories/    # implementações SQLite das interfaces do domain
-    ├── viewmodels/          # stores Zustand (adaptam use cases -> UI)
+    ├── viewmodels/          # stores Zustand: authStore, vehicleStore, expenseStore, reminderStore
     ├── presentation/
     │   ├── navigation/
     │   ├── screens/
     │   └── components/
     ├── services/
-    │   ├── notifications/   # implementação de NotificationScheduler (expo-notifications)
-    │   └── auth/            # implementação de PasswordHasher (expo-crypto)
-    └── utils/
+    │   ├── notifications/   # NoopNotificationScheduler (placeholder); expo-notifications real, a implementar
+    │   └── auth/            # ExpoPasswordHasher, ExpoSessionTokenService, sessionTokenStorage (SecureStore)
+    └── utils/                # hex.ts (bytesToHex), id.ts (generateId) e outros helpers sem estado
 ```
 
 Cada pasta ainda vazia tem um `README.md` explicando o que vai entrar nela
@@ -113,11 +113,14 @@ sequenceDiagram
   (litros vs. kWh), controlada pelo `FuelType` do registro.
 - **Notificações locais, não push remoto**: consistente com offline-first;
   não depende de backend/servidor.
-- **Hash de senha com `expo-crypto` (SHA-256 + salt + iterações) em vez
-  de bcrypt/Argon2**: Expo managed workflow não tem binding nativo pra
-  essas libs sem dev client/eject; um PBKDF2 caseiro com iterações
-  suficientes é aceitável pra ameaça real aqui (aparelho perdido/roubado),
-  já que não há servidor pra sofrer ataque de força bruta remoto.
+- **Hash de senha com `expo-crypto` (SHA-256 + salt + 1.000 iterações)
+  em vez de bcrypt/Argon2**: Expo managed workflow não tem binding
+  nativo pra essas libs sem dev client/eject. 1.000 iterações (bem
+  menos que os ~100k de um PBKDF2 de servidor) porque
+  `digestStringAsync` cruza a ponte nativa a cada chamada — mais
+  iterações travariam login/cadastro por vários segundos. Aceitável pra
+  ameaça real aqui (aparelho perdido/roubado, sem servidor pra sofrer
+  força bruta remota); ver `src/services/auth/README.md`.
 - **Login não amarra `Vehicle`/`Expense` a `Driver`**: MVP assume um
   motorista por instalação; `Driver` é só a trava de acesso. Só vira
   chave estrangeira se o app precisar de múltiplos motoristas por
@@ -138,3 +141,17 @@ sequenceDiagram
   absolutos (mesmo raciocínio de sempre: poucas centenas/milhares de
   linhas); as outras otimizações (enums, datas e dinheiro como
   `INTEGER`, tabela única para `expenses`) continuam valendo.
+- **Stores sem container de DI**: `viewmodels/dependencies.ts` só
+  instancia os repositórios/serviços uma vez em módulo top-level. Um
+  container (InversifyJS etc.) seria over-engineering pro tamanho do
+  app — a única "injeção" que existe é a store importar de
+  `dependencies.ts` em vez de instanciar direto.
+- **`expenseStore` conhece `vehicleStore`/`reminderStore` (não o
+  contrário)**: `RegisterExpense` atualiza `vehicles.odometer_km` e
+  conclui lembretes só no banco, então depois de chamar o caso de uso o
+  `expenseStore` também empurra a entidade atualizada pro
+  `vehicleStore`/`reminderStore` em memória (`syncSideEffects`) — senão
+  a tela do veículo mostraria hodômetro/lembrete desatualizados até um
+  reload manual. É uma dependência de uma via só (expense -> vehicle/
+  reminder), nunca ao contrário, pra não criar um ciclo de import entre
+  stores.

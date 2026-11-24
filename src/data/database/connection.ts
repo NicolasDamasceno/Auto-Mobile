@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import { SCHEMA_SQL } from './schema';
+import { MIGRATION_V2_SQL, SCHEMA_SQL } from './schema';
 
 const DATABASE_NAME = 'automobile.db';
 
@@ -7,7 +7,7 @@ const DATABASE_NAME = 'automobile.db';
  * Versão do schema. Incremente ao adicionar uma migração nova em
  * `runMigrations` (nunca edite o SQL de uma versão já publicada).
  */
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -39,7 +39,10 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
       await tx.execAsync(SCHEMA_SQL);
       currentVersion = 1;
     }
-    // Próxima migração: if (currentVersion < 2) { await tx.execAsync(...); currentVersion = 2; }
+    if (currentVersion < 2) {
+      await tx.execAsync(MIGRATION_V2_SQL);
+      currentVersion = 2;
+    }
   });
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION};`);

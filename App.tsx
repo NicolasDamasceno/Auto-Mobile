@@ -1,3 +1,5 @@
+// Precisa vir antes de tudo: o React Native não implementa URL por completo, e o supabase-js usa.
+import 'react-native-url-polyfill/auto';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet, Text, View } from 'react-native';
