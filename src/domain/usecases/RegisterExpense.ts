@@ -1,13 +1,13 @@
-import { Expense } from '../entities/Expense';
+import { Expense, FuelExpense, MaintenanceExpense } from '../entities/Expense';
 import { ExpenseRepository } from '../repositories/ExpenseRepository';
 import { VehicleRepository } from '../repositories/VehicleRepository';
 import { MaintenanceReminderRepository } from '../repositories/MaintenanceReminderRepository';
-import { MaintenanceExpense } from '../entities/Expense';
 
 /**
  * UC05/UC06/UC07 — Registrar despesa (abastecimento/recarga, manutenção ou outra).
- * Atualiza o hodômetro do veículo e, se a despesa for uma manutenção vinculada
- * a um lembrete pendente, conclui o lembrete (UC14).
+ * Valida que um FuelExpense é compatível com o veículo (regra 2/8 do
+ * DOMAIN_MODEL.md), atualiza o hodômetro do veículo e, se a despesa for uma
+ * manutenção vinculada a um lembrete pendente, conclui o lembrete (UC14).
  */
 export class RegisterExpense {
   constructor(
@@ -17,13 +17,19 @@ export class RegisterExpense {
   ) {}
 
   async execute(expense: Expense, fulfillsReminderId?: string): Promise<void> {
+    const vehicle = await this.vehicleRepository.findById(expense.vehicleId);
+    if (!vehicle) {
+      throw new Error('Veículo não encontrado.');
+    }
+
+    if (expense instanceof FuelExpense && !vehicle.acceptedFuelTypes.includes(expense.fuelType)) {
+      throw new Error(`O veículo "${vehicle.nickname}" não aceita abastecimento com ${expense.fuelType}.`);
+    }
+
     await this.expenseRepository.save(expense);
 
-    const vehicle = await this.vehicleRepository.findById(expense.vehicleId);
-    if (vehicle) {
-      vehicle.updateOdometer(expense.odometerKm);
-      await this.vehicleRepository.save(vehicle);
-    }
+    vehicle.updateOdometer(expense.odometerKm);
+    await this.vehicleRepository.save(vehicle);
 
     if (fulfillsReminderId && expense instanceof MaintenanceExpense) {
       const reminder = await this.reminderRepository.findById(fulfillsReminderId);

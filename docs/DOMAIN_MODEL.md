@@ -35,6 +35,7 @@ classDiagram
         +string plate
         +number currentOdometerKm
         +bool hasGnvKit
+        +FuelType combustionFuelType
         +Date createdAt
         +isElectric() bool
         +isHybrid() bool
@@ -123,10 +124,10 @@ múltiplos motoristas por dispositivo, aí sim `Vehicle` ganha
    atualizado para valores maiores ou iguais.
 2. `FuelExpense.fuelType` deve estar em `Vehicle.acceptedFuelTypes()`: um
    veículo `ELECTRIC` só aceita `ELECTRIC`; um veículo `HYBRID` aceita
-   `ELECTRIC` ou o tipo de combustão configurado; um veículo `GASOLINE`,
-   `ETHANOL` ou `FLEX` com `hasGnvKit = true` também aceita `GNV`, além do
-   seu `fuelType` de fábrica (kit de conversão bi/tricombustível — não
-   troca o `fuelType` original do veículo).
+   `ELECTRIC` ou `Vehicle.combustionFuelType` (regra 12); um veículo
+   `GASOLINE`, `ETHANOL` ou `FLEX` com `hasGnvKit = true` também aceita
+   `GNV`, além do seu `fuelType` de fábrica (kit de conversão
+   bi/tricombustível — não troca o `fuelType` original do veículo).
 3. `unit()` de um `FuelExpense` é `kWh` quando `fuelType = ELECTRIC`, e
    `L` (litros) para os demais.
 4. Um `MaintenanceReminder` fica `OVERDUE` quando a data atual passa de
@@ -161,3 +162,12 @@ múltiplos motoristas por dispositivo, aí sim `Vehicle` ganha
     90 dias) — na prática só expira se o motorista ficar 90 dias sem
     abrir o app. `Logout` apaga a sessão do motorista no banco; apagar o
     token do SecureStore é responsabilidade do chamador (fora do domain).
+12. `Vehicle.combustionFuelType` é obrigatório quando `fuelType = HYBRID`
+    (deve ser `GASOLINE`, `ETHANOL` ou `FLEX` — o motor elétrico já é
+    implícito via `ELECTRIC`) e inválido para qualquer outro `fuelType`
+    (o combustível já é o próprio `fuelType` nesses casos). Guarda a
+    resposta a "que gasolina/etanol/flex esse híbrido usa", sem criar um
+    `FuelType` combinado só pra híbridos. Kit de GNV (regra 9) permanece
+    restrito a `GASOLINE`/`ETHANOL`/`FLEX` de fábrica — não se estende a
+    `HYBRID`, mesmo com `combustionFuelType` compatível (conversão
+    bi/tricombustível sobre híbrido não é suportada).

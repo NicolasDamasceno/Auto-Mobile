@@ -87,3 +87,12 @@ CREATE TABLE IF NOT EXISTS maintenance_reminders (
 );
 CREATE INDEX IF NOT EXISTS idx_reminders_vehicle_status ON maintenance_reminders(vehicle_id, status);
 `;
+
+/**
+ * Migração v2: combustível do motor térmico de veículos HYBRID (regra 2 do
+ * DOMAIN_MODEL.md — um híbrido aceita ELECTRIC ou esse combustível no
+ * FuelExpense). NULL para qualquer veículo não-HYBRID.
+ */
+export const MIGRATION_V2_SQL = `
+ALTER TABLE vehicles ADD COLUMN combustion_fuel_type INTEGER;
+`;
